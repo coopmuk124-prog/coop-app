@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>สหกรณ์สมาชิก</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Prompt:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #00A651;
+    --green-dark: #007A3D;
+    --green-light: #E8F5EE;
+    --gold: #C9A84C;
+    --gold-light: #FBF4E3;
+    --text: #1A2E1A;
+    --text-muted: #6B7C6B;
+    --bg: #F4F8F4;
+    --white: #FFFFFF;
+    --red: #C0392B;
+    --red-light: #FDECEA;
+    --border: #D4E6D4;
+    --shadow: 0 2px 16px rgba(0,100,50,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Sarabun', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+  }
+
+  /* ===== TOP NAV ===== */
+  .topbar {
+    background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 10px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,100,50,0.25);
+  }
+  .topbar-logo {
+    width: 38px; height: 38px;
+    background: var(--white);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .topbar-title { color: var(--white); }
+  .topbar-title h1 { font-family: 'Prompt', sans-serif; font-size: 15px; font-weight: 600; }
+  .topbar-title p { font-size: 11px; opacity: 0.8; }
+  .topbar-user {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .topbar-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.5);
+    object-fit: cover;
+  }
+  .topbar-avatar-placeholder {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: white;
+  }
+
+  /* ===== BOTTOM NAV ===== */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--white);
+    border-top: 1.5px solid var(--border);
+    display: flex;
+    box-shadow: 0 -2px 16px rgba(0,100,50,0.10);
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 10px 0 8px;
+    gap: 3px; cursor: pointer;
+    color: var(--text-muted);
+    transition: color 0.2s;
+    font-size: 10px;
+    border: none; background: none;
+    font-family: 'Sarabun', sans-serif;
+  }
+  .nav-item.active { color: var(--green); }
+  .nav-icon { font-size: 22px; line-height: 1; }
+
+  /* ===== MAIN CONTENT ===== */
+  .main { padding: 16px 16px 80px; }
+
+  /* ===== CARDS ===== */
+  .card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .card-title {
+    font-family: 'Prompt', sans-serif;
+    font-size: 14px; font-weight: 600;
+    color: var(--green-dark);
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  /* ===== HERO CARD ===== */
+  .hero-card {
+    background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 14px;
+    color: white;
+    position: relative; overflow: hidden;
+  }
+  .hero-card::before {
+    content: '';
+    position: absolute; top: -30px; right: -30px;
+    width: 120px; height: 120px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 50%;
+  }
+  .hero-card::after {
+    content: '';
+    position: absolute; bottom: -40px; right: 30px;
+    width: 80px; height: 80px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+  }
+  .hero-name { font-size: 13px; opacity: 0.85; margin-bottom: 2px; }
+  .hero-id { font-size: 11px; opacity: 0.65; margin-bottom: 14px; font-family: monospace; }
+  .hero-debt-label { font-size: 11px; opacity: 0.80; }
+  .hero-debt-amount {
+    font-family: 'Prompt', sans-serif;
+    font-size: 28px; font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .hero-debt-unit { font-size: 14px; opacity: 0.8; margin-left: 3px; }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.18);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 10px;
+    margin-top: 8px;
+  }
+
+  /* ===== DEBT BREAKDOWN ===== */
+  .debt-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .debt-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .debt-row:first-child { padding-top: 0; }
+  .debt-label { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+  .debt-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .debt-value { font-weight: 600; font-size: 13px; }
+  .debt-value.overdue { color: var(--red); }
+  .debt-value.normal { color: var(--text); }
+  .debt-total-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0 0;
+    border-top: 2px solid var(--green-light);
+    margin-top: 4px;
+  }
+  .debt-total-label { font-weight: 700; font-size: 14px; color: var(--green-dark); }
+  .debt-total-value { font-weight: 700; font-size: 16px; color: var(--green-dark); }
+
+  /* ===== LOGIN SCREEN ===== */
+  .login-screen {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 32px 24px;
+    background: var(--bg);
+  }
+  .login-logo {
+    width: 90px; height: 90px;
+    background: linear-gradient(135deg, var(--green-dark), var(--green));
+    border-radius: 28px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 44px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(0,120,60,0.25);
+  }
+  .login-title {
+    font-family: 'Prompt', sans-serif;
+    font-size: 22px; font-weight: 700;
+    color: var(--green-dark);
+    text-align: center; margin-bottom: 4px;
+  }
+  .login-subtitle {
+    font-size: 13px; color: var(--text-muted);
+    text-align: center; margin-bottom: 32px;
+  }
+  .login-input-group { width: 100%; margin-bottom: 14px; }
+  .login-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; display: block; }
+  .login-input {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-size: 15px;
+    font-family: 'Sarabun', sans-serif;
+    background: var(--white);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .login-input:focus { border-color: var(--green); }
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--green-dark), var(--green));
+    color: white;
+    border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 600;
+    font-family: 'Prompt', sans-serif;
+    cursor: pointer;
+    margin-top: 6px;
+    box-shadow: 0 4px 16px rgba(0,120,60,0.25);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn-primary:active { transform: scale(0.98); box-shadow: none; }
+
+  /* ===== DOCUMENT LIST ===== */
+  .doc-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    text-decoration: none; color: var(--text);
+  }
+  .doc-item:last-child { border-bottom: none; }
+  .doc-icon {
+    width: 42px; height: 42px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .doc-icon.pdf { background: #FDECEA; }
+  .doc-icon.rule { background: var(--gold-light); }
+  .doc-icon.announce { background: #EBF5FF; }
+  .doc-info { flex: 1; }
+  .doc-title { font-size: 13px; font-weight: 600; line-height: 1.4; }
+  .doc-date { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .doc-arrow { font-size: 18px; color: var(--border); }
+
+  /* ===== NEWS ===== */
+  .news-item {
+    display: flex; gap: 12px; padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .news-item:last-child { border-bottom: none; }
+  .news-thumbnail {
+    width: 70px; height: 56px;
+    border-radius: 10px;
+    background: var(--green-light);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    overflow: hidden;
+  }
+  .news-thumbnail img { width: 100%; height: 100%; object-fit: cover; }
+  .news-text { flex: 1; }
+  .news-tag {
+    display: inline-block;
+    background: var(--green-light);
+    color: var(--green-dark);
+    font-size: 9px; font-weight: 700;
+    padding: 2px 7px; border-radius: 20px;
+    margin-bottom: 4px; letter-spacing: 0.3px;
+  }
+  .news-title { font-size: 13px; font-weight: 600; line-height: 1.4; }
+  .news-date { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+  /* ===== LOADING ===== */
+  .loading-screen {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+    background: var(--bg);
+  }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== ALERT BOX ===== */
+  .alert {
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    margin-bottom: 14px;
+    display: flex; gap: 8px;
+  }
+  .alert.warning { background: var(--red-light); color: var(--red); border: 1px solid #f5c6c2; }
+  .alert.info { background: var(--green-light); color: var(--green-dark); border: 1px solid #b7dfc7; }
+
+  /* ===== PAGE TRANSITIONS ===== */
+  .page { animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* ===== SECTION LABEL ===== */
+  .section-label {
+    font-size: 11px; font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.8px; text-transform: uppercase;
+    margin: 18px 0 8px;
+  }
+
+  .tag-overdue {
+    display: inline-block;
+    background: var(--red-light);
+    color: var(--red);
+    font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 20px;
+  }
+  .tag-normal {
+    display: inline-block;
+    background: var(--green-light);
+    color: var(--green-dark);
+    font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 20px;
+  }
+  .empty-state {
+    text-align: center; padding: 32px 0; color: var(--text-muted);
+    font-size: 13px;
+  }
+  .empty-state .emoji { font-size: 36px; display: block; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<!-- ===== SCREENS ===== -->
+<div id="app"></div>
+
+<script>
+// ============================================================
+// CONFIG — แก้ไขค่าเหล่านี้ให้ตรงกับของสหกรณ์
+// ============================================================
+const CONFIG = {
+  LIFF_ID: "YOUR_LIFF_ID",               // ← ใส่ LIFF ID จาก LINE Developers
+  GAS_URL: "YOUR_GOOGLE_APPS_SCRIPT_URL", // ← ใส่ URL ของ Google Apps Script
+  COOP_NAME: "สหกรณ์เกษตรกรมุกดาหาร จำกัด",
+  COOP_SHORT: "สหกรณ์มุกดาหาร",
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  screen: 'loading',       // loading | login | home | credit | docs | news
+  activePage: 'home',
+  lineProfile: null,
+  memberId: '',
+  memberData: null,
+  loanData: null,
+  docs: [],
+  news: [],
+  error: null,
+};
+
+// ============================================================
+// FORMATTER
+// ============================================================
+const fmt = (n) => {
+  if (n == null || n === '') return '–';
+  return Number(n).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+const fmtDate = (d) => {
+  if (!d) return '';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+};
+
+// ============================================================
+// API
+// ============================================================
+async function fetchFromGAS(action, params = {}) {
+  const url = new URL(CONFIG.GAS_URL);
+  url.searchParams.set('action', action);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error('Network error');
+  return res.json();
+}
+
+async function loadMemberData(memberId) {
+  // ข้อมูลจำลอง — เมื่อตั้ง GAS จริงให้ลบออกและ uncomment บรรทัด fetchFromGAS
+  return {
+    member: {
+      id: memberId || '1717',
+      name: 'นางสมศรี วังคะฮาต',
+      group: '0002 - กลุ่มบ้านคำชะอี',
+      type: 'สามัญ',
+    },
+    loan: {
+      contract: '1016400151',
+      principal_due: 93400,
+      principal_normal: 0,
+      interest_due: 10563.15,
+      interest_overdue: 42065.82,
+      fine_due: 2640.79,
+      fine_overdue: 10496.10,
+      total: 159165.86,
+    }
+  };
+  // return fetchFromGAS('getMember', { memberId });
+}
+
+async function loadDocs() {
+  // ข้อมูลจำลอง
+  return [
+    { id: 1, type: 'rule', title: 'ข้อบังคับสหกรณ์ พ.ศ. 2565', date: '2022-06-01', url: '#' },
+    { id: 2, type: 'rule', title: 'ระเบียบว่าด้วยสินเชื่อ พ.ศ. 2566', date: '2023-01-15', url: '#' },
+    { id: 3, type: 'announce', title: 'ประกาศอัตราดอกเบี้ยปี 2567', date: '2024-01-05', url: '#' },
+    { id: 4, type: 'announce', title: 'ประกาศหลักเกณฑ์การถือหุ้น', date: '2023-11-20', url: '#' },
+    { id: 5, type: 'pdf', title: 'รายงานประจำปี 2566', date: '2024-03-01', url: '#' },
+  ];
+}
+
+async function loadNews() {
+  return [
+    { id: 1, title: 'สหกรณ์เปิดรับสมัครสมาชิกใหม่ประจำปี 2568', date: '2025-02-01', tag: 'ข่าวสาร', emoji: '📢' },
+    { id: 2, title: 'ปิดรับชำระหนี้วันที่ 31 มีนาคม 2568', date: '2025-01-20', tag: 'ประชาสัมพันธ์', emoji: '📅' },
+    { id: 3, title: 'ประชุมใหญ่สามัญประจำปี 2568 วันที่ 15 เมษายน', date: '2025-01-10', tag: 'กิจกรรม', emoji: '🤝' },
+    { id: 4, title: 'สหกรณ์จ่ายเงินปันผลประจำปี 2567 แล้ว', date: '2024-12-28', tag: 'ข่าวสาร', emoji: '💰' },
+  ];
+}
+
+// ============================================================
+// RENDER ENGINE
+// ============================================================
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = buildScreen();
+  attachHandlers();
+}
+
+function buildScreen() {
+  const s = state.screen;
+  if (s === 'loading') return buildLoading();
+  if (s === 'login') return buildLogin();
+  return buildApp();
+}
+
+function buildLoading() {
+  return `<div class="loading-screen">
+    <div class="spinner"></div>
+    <p style="color:var(--text-muted);font-size:13px">กำลังโหลด...</p>
+  </div>`;
+}
+
+function buildLogin() {
+  return `<div class="login-screen">
+    <div class="login-logo">🌾</div>
+    <h1 class="login-title">${CONFIG.COOP_SHORT}</h1>
+    <p class="login-subtitle">ระบบข้อมูลสมาชิกสหกรณ์<br>กรุณาใส่รหัสสมาชิกเพื่อเข้าสู่ระบบ</p>
+    ${state.error ? `<div class="alert warning">⚠️ ${state.error}</div>` : ''}
+    <div class="login-input-group">
+      <label class="login-label">รหัสสมาชิก</label>
+      <input id="memberIdInput" class="login-input" type="number" placeholder="เช่น 1717" inputmode="numeric">
+    </div>
+    <button class="btn-primary" id="loginBtn">🔐 เข้าสู่ระบบ</button>
+    <p style="font-size:11px;color:var(--text-muted);margin-top:16px;text-align:center">
+      ${CONFIG.COOP_NAME}
+    </p>
+  </div>`;
+}
+
+function buildApp() {
+  return `
+    ${buildTopbar()}
+    <div class="main page">
+      ${buildActivePage()}
+    </div>
+    ${buildBottomNav()}
+  `;
+}
+
+function buildTopbar() {
+  const p = state.lineProfile;
+  return `<div class="topbar">
+    <div class="topbar-logo">🌾</div>
+    <div class="topbar-title">
+      <h1>${CONFIG.COOP_SHORT}</h1>
+      <p>สวัสดี, ${state.memberData?.member?.name?.split(' ')[0] || 'สมาชิก'}</p>
+    </div>
+    <div class="topbar-user">
+      ${p?.pictureUrl
+        ? `<img class="topbar-avatar" src="${p.pictureUrl}" alt="">`
+        : `<div class="topbar-avatar-placeholder">👤</div>`}
+    </div>
+  </div>`;
+}
+
+function buildBottomNav() {
+  const pages = [
+    { id: 'home', icon: '🏠', label: 'หน้าหลัก' },
+    { id: 'credit', icon: '💳', label: 'สินเชื่อ' },
+    { id: 'docs', icon: '📋', label: 'ระเบียบ' },
+    { id: 'news', icon: '📢', label: 'ข่าวสาร' },
+  ];
+  return `<nav class="bottom-nav">
+    ${pages.map(p => `
+      <button class="nav-item ${state.activePage === p.id ? 'active' : ''}" data-page="${p.id}">
+        <span class="nav-icon">${p.icon}</span>
+        <span>${p.label}</span>
+      </button>
+    `).join('')}
+  </nav>`;
+}
+
+function buildActivePage() {
+  const p = state.activePage;
+  if (p === 'home') return buildHome();
+  if (p === 'credit') return buildCredit();
+  if (p === 'docs') return buildDocs();
+  if (p === 'news') return buildNews();
+  return '';
+}
+
+function buildHome() {
+  const m = state.memberData?.member || {};
+  const l = state.memberData?.loan || {};
+  const hasOverdue = (l.interest_overdue > 0 || l.fine_overdue > 0);
+  return `
+    ${hasOverdue ? `<div class="alert warning">⚠️ มีดอกเบี้ย/ค่าปรับค้างชำระ กรุณาติดต่อสำนักงาน</div>` : ''}
+    <div class="hero-card">
+      <p class="hero-name">${m.name || '–'}</p>
+      <p class="hero-id">รหัสสมาชิก: ${m.id || '–'} &nbsp;|&nbsp; ${m.type || ''}</p>
+      <p class="hero-debt-label">หนี้คงเหลือรวม</p>
+      <p class="hero-debt-amount">${fmt(l.total)}<span class="hero-debt-unit">บาท</span></p>
+      <span class="hero-badge">${m.group || ''}</span>
+    </div>
+
+    <p class="section-label">สรุปสินเชื่อ</p>
+    <div class="card">
+      <div class="debt-row">
+        <span class="debt-label"><span class="debt-dot" style="background:#2E86C1"></span>ต้นเงินคงเหลือ</span>
+        <span class="debt-value normal">${fmt((l.principal_due||0)+(l.principal_normal||0))} ฿</span>
+      </div>
+      <div class="debt-row">
+        <span class="debt-label"><span class="debt-dot" style="background:#27AE60"></span>ดอกเบี้ยพึงชำระ</span>
+        <span class="debt-value normal">${fmt(l.interest_due)} ฿</span>
+      </div>
+      <div class="debt-row">
+        <span class="debt-label"><span class="debt-dot" style="background:#C0392B"></span>ดอกเบี้ยค้างชำระ</span>
+        <span class="debt-value overdue">${fmt(l.interest_overdue)} ฿</span>
+      </div>
+      <div class="debt-row">
+        <span class="debt-label"><span class="debt-dot" style="background:#E67E22"></span>ค่าปรับพึงชำระ</span>
+        <span class="debt-value normal">${fmt(l.fine_due)} ฿</span>
+      </div>
+      <div class="debt-row">
+        <span class="debt-label"><span class="debt-dot" style="background:#922B21"></span>ค่าปรับค้างชำระ</span>
+        <span class="debt-value overdue">${fmt(l.fine_overdue)} ฿</span>
+      </div>
+      <div class="debt-total-row">
+        <span class="debt-total-label">รวมหนี้ทั้งสิ้น</span>
+        <span class="debt-total-value">${fmt(l.total)} ฿</span>
+      </div>
+    </div>
+
+    <p class="section-label">ข่าวล่าสุด</p>
+    ${(state.news.slice(0,2)).map(n => `
+      <div class="card" style="padding:14px 18px 10px">
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div style="font-size:28px;line-height:1">${n.emoji}</div>
+          <div>
+            <span class="news-tag">${n.tag}</span>
+            <p style="font-size:13px;font-weight:600;margin-top:2px">${n.title}</p>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:3px">${fmtDate(n.date)}</p>
+          </div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function buildCredit() {
+  const l = state.memberData?.loan || {};
+  const m = state.memberData?.member || {};
+  return `
+    <p class="section-label">รายละเอียดสินเชื่อ</p>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">📄 ข้อมูลสัญญา</span>
+      </div>
+      <div class="debt-row">
+        <span class="debt-label">เลขที่สัญญา</span>
+        <span style="font-size:13px;font-weight:600;font-family:monospace">${l.contract || '–'}</span>
+      </div>
+      <div class="debt-row">
+        <span class="debt-label">กลุ่ม</span>
+        <span style="font-size:12px;font-weight:500">${m.group || '–'}</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">💰 ต้นเงิน</span>
+      </div>
+      <div class="debt-row">
+        <span class="debt-label">ถึงกำหนดชำระ</span>
+        <span class="debt-value overdue">${fmt(l.principal_due)} ฿</span>
+      </div>
+      <div class="debt-row">
+        <span class="debt-label">ปกติ (ยังไม่ถึงกำหนด)</span>
+        <span class="debt-value normal">${fmt(l.principal_normal)} ฿</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">📈 ดอกเบี้ย</span>
+      </div>
+      <div class="debt-row">
+        <span class="debt-label">ดอกเบี้ยพึงชำระ</span>
+        <span class="debt-value normal">${fmt(l.interest_due)} ฿</span>
+      </div>
+      <div class="debt-row">
+        <span class="debt-label">ดอกเบี้ยค้างชำระ <span class="tag-overdue">ค้าง</span></span>
+        <span class="debt-value overdue">${fmt(l.interest_overdue)} ฿</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">⚠️ ค่าปรับ</span>
+      </div>
+      <div class="debt-row">
+        <span class="debt-label">ค่าปรับพึงชำระ</span>
+        <span class="debt-value normal">${fmt(l.fine_due)} ฿</span>
+      </div>
+      <div class="debt-row">
+        <span class="debt-label">ค่าปรับค้างชำระ <span class="tag-overdue">ค้าง</span></span>
+        <span class="debt-value overdue">${fmt(l.fine_overdue)} ฿</span>
+      </div>
+    </div>
+
+    <div class="card" style="background:var(--green-light);border-color:var(--green)">
+      <div class="debt-total-row" style="border-top:none;padding-top:0">
+        <span class="debt-total-label" style="font-size:16px">💳 รวมหนี้ทั้งสิ้น</span>
+        <span class="debt-total-value" style="font-size:20px">${fmt(l.total)} ฿</span>
+      </div>
+    </div>
+  `;
+}
+
+function buildDocs() {
+  const typeIcon = { rule: '📜', announce: '📣', pdf: '📄' };
+  const typeBg = { rule: 'rule', announce: 'announce', pdf: 'pdf' };
+  return `
+    <p class="section-label">ข้อบังคับ / ระเบียบ</p>
+    <div class="card" style="padding: 0 18px">
+      ${state.docs.filter(d => d.type !== 'pdf').map(d => `
+        <a class="doc-item" href="${d.url}" target="_blank">
+          <div class="doc-icon ${typeBg[d.type]}">${typeIcon[d.type]}</div>
+          <div class="doc-info">
+            <p class="doc-title">${d.title}</p>
+            <p class="doc-date">ประกาศ ${fmtDate(d.date)}</p>
+          </div>
+          <span class="doc-arrow">›</span>
+        </a>
+      `).join('')}
+    </div>
+
+    <p class="section-label">เอกสารเผยแพร่</p>
+    <div class="card" style="padding: 0 18px">
+      ${state.docs.filter(d => d.type === 'pdf').map(d => `
+        <a class="doc-item" href="${d.url}" target="_blank">
+          <div class="doc-icon pdf">${typeIcon[d.type]}</div>
+          <div class="doc-info">
+            <p class="doc-title">${d.title}</p>
+            <p class="doc-date">${fmtDate(d.date)}</p>
+          </div>
+          <span class="doc-arrow">›</span>
+        </a>
+      `).join('')}
+    </div>
+  `;
+}
+
+function buildNews() {
+  return `
+    <p class="section-label">ข่าวสารและประชาสัมพันธ์</p>
+    <div class="card" style="padding: 0 18px">
+      ${state.news.map(n => `
+        <div class="news-item">
+          <div class="news-thumbnail">${n.emoji}</div>
+          <div class="news-text">
+            <span class="news-tag">${n.tag}</span>
+            <p class="news-title">${n.title}</p>
+            <p class="news-date">${fmtDate(n.date)}</p>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ============================================================
+// HANDLERS
+// ============================================================
+function attachHandlers() {
+  // Nav tabs
+  document.querySelectorAll('[data-page]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.activePage = btn.dataset.page;
+      render();
+    });
+  });
+
+  // Login
+  const loginBtn = document.getElementById('loginBtn');
+  if (loginBtn) {
+    loginBtn.addEventListener('click', async () => {
+      const input = document.getElementById('memberIdInput');
+      const id = input.value.trim();
+      if (!id) { state.error = 'กรุณาใส่รหัสสมาชิก'; render(); return; }
+      loginBtn.textContent = 'กำลังตรวจสอบ...';
+      loginBtn.disabled = true;
+      try {
+        const data = await loadMemberData(id);
+        if (!data || !data.member) { state.error = 'ไม่พบรหัสสมาชิก กรุณาตรวจสอบอีกครั้ง'; render(); return; }
+        state.memberData = data;
+        state.memberId = id;
+        state.screen = 'app';
+        state.activePage = 'home';
+        render();
+      } catch (e) {
+        state.error = 'เกิดข้อผิดพลาด กรุณาลองใหม่';
+        render();
+      }
+    });
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+async function init() {
+  state.screen = 'loading';
+  render();
+
+  // Load static data
+  state.docs = await loadDocs();
+  state.news = await loadNews();
+
+  // Init LIFF
+  try {
+    await liff.init({ liffId: CONFIG.LIFF_ID });
+    if (liff.isLoggedIn()) {
+      state.lineProfile = await liff.getProfile();
+    }
+  } catch (e) {
+    console.log('LIFF not available (running outside LINE):', e.message);
+  }
+
+  state.screen = 'login';
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
